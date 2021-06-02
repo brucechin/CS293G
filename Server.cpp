@@ -82,7 +82,7 @@ class EncryptSearchIndex{
         std::vector<std::vector<uint8_t>> m_filter;
         uint32_t m_hashNum = 3;
         uint32_t fileNum = FILE_MAX;
-        uint32_t bloomFilterSize = 2048; //number of slots for each file.
+        uint32_t bloomFilterSize = 1024; //number of slots for each file.
     public:
         EncryptSearchIndex()
         {
@@ -91,6 +91,13 @@ class EncryptSearchIndex{
                 //printf("index allocated %d size is %d\n", i, m_filter[i].size());
             }
             
+        }
+        EncryptSearchIndex(uint32_t fileCapacity)
+        {
+            fileNum = fileCapacity;
+            for(int i = 0; i < bloomFilterSize; i++){
+                m_filter.push_back(std::vector<uint8_t>(fileNum));
+            }
         }
         EncryptSearchIndex(uint32_t fileCapacity, uint32_t blmFilterSize)
         {
@@ -155,8 +162,9 @@ class Client{
         uint32_t serverFileCapacity = FILE_MAX;
         
 
-    Client(EncryptSearchIndex& index){
+    Client(EncryptSearchIndex& index, uint32_t file_max){
         index = index;
+        serverFileCapacity = file_max;
     }
 
 
@@ -176,6 +184,14 @@ class Client{
             keywordsToInsert.push_back(tmp);
         }
         index.insertFile(fileIndex, keywordsToInsert);
+    }
+
+    bool updateFile(uint32_t fileIndex, std::map<std::string, uint32_t> keywordsCount){
+        insertFile(fileIndex, keywordsCount);//actually they have the same functionality
+    }
+
+    bool removeFile(uint32_t fileIndex){
+        index.removeFile(fileIndex);
     }
 
     std::vector<uint32_t> queryOneKeyword(std::string keyword, uint32_t topK){ //return the top K file indexes ordered by the keyword frequency.
@@ -225,25 +241,29 @@ void parallelBench(){
                                         "potter","construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file",
                                         "animal", "species", "dream", "drink","driver","food","drug","earth","ease","economic","export","expand","failure"};
 
-    EncryptSearchIndex index;
-    Client client(index);
-    initServerIndex(client);
-    int threadNum = 128; 
 
-    for(int k = 1; k <= 128; k*=2){
-        threadNum = k;
-        std::vector<std::thread> threads;
-        auto startTime = std::chrono::system_clock::now();                                           
-        for(int i = 0; i < threadNum; i++){
-            threads.push_back(std::thread(&Client::queryOneKeyword, &client, keywords[i % keywords.size()], 5));
+    for(int capacity = 128000; capacity < 5120000; capacity*=2){
+        EncryptSearchIndex index(capacity);
+        Client client(index, capacity);
+        initServerIndex(client);
+        int threadNum = 128; 
+
+        for(int k = 1; k <= 128; k*=2){
+            threadNum = k;
+            std::vector<std::thread> threads;
+            auto startTime = std::chrono::system_clock::now();                                           
+            for(int i = 0; i < threadNum; i++){
+                threads.push_back(std::thread(&Client::queryOneKeyword, &client, keywords[i % keywords.size()], 5));
+            }
+            for(int i = 0; i < threadNum; i++){
+                threads[i].join();
+            }
+            auto endTime = std::chrono::system_clock::now();                                             
+            std::chrono::duration<double> elapsedSeconds = endTime - startTime;                                
+            std::cout << ">>>file num " << capacity << "  " << k << " GET missions completed in " << elapsedSeconds.count() << " seconds.\n"; 
         }
-        for(int i = 0; i < threadNum; i++){
-            threads[i].join();
-        }
-        auto endTime = std::chrono::system_clock::now();                                             
-        std::chrono::duration<double> elapsedSeconds = endTime - startTime;                                
-        std::cout << ">>>  " << k << " missions completed in " << elapsedSeconds.count() << " seconds.\n"; 
     }
+    
 }
 
 int main(int argc, char **argv){
