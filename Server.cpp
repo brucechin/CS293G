@@ -220,8 +220,10 @@ class Client{
 };
 
 void initServerIndex(Client& client){
-    std::vector<std::string> keywords = {"hello", "world", "push", "back","sort","based","out","in","scope","project","vector","PIR","harry","potter","construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file"};
-    int avgKeywordsPerFile = 5;
+    std::vector<std::string> keywords = {"hello", "world", "push", "back","sort","based","out","in","scope","project","vector","PIR","harry","potter",
+    "construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file", "save", "access", "individual", "add","store", "delete", "cpp", "forum", "push","extract","among","space","file","string","object",
+    "write","program","article","execute","develop","follow","solution","same","against","when","submitted","mode","work","sentence","enter","conference","blog","interesting","courses","runtimes","comments","contact"};
+    int avgKeywordsPerFile = 50;
     for(int i = 0; i < client.serverFileCapacity; i++){
         std::map<std::string, uint32_t> toInsertKeywordsCounter;
         //printf("init step %d\n", i);
@@ -237,9 +239,9 @@ void initServerIndex(Client& client){
 }
 
 void parallelBench(){
-    std::vector<std::string> keywords = {"hello", "world", "push", "back","sort","based","out","in","scope","project","vector","PIR","harry",
-                                        "potter","construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file",
-                                        "animal", "species", "dream", "drink","driver","food","drug","earth","ease","economic","export","expand","failure"};
+    std::vector<std::string> keywords = {"hello", "world", "push", "back","sort","based","out","in","scope","project","vector","PIR","harry","potter",
+    "construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file", "save", "access", "individual", "add","store", "delete", "cpp", "forum", "push","extract","among","space","file","string","object",
+    "write","program","article","execute","develop","follow","solution","same","against","when","submitted","mode","work","sentence","enter","conference","blog","interesting","courses","runtimes","comments","contact"};
 
 
     for(int capacity = 128000; capacity < 5120000; capacity*=2){
