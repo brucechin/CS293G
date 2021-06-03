@@ -238,6 +238,47 @@ void initServerIndex(Client& client){
     //client.index.printFilter();
 }
 
+
+void ParallelUpdateBench(){
+    std::vector<std::string> keywords = {"hello", "world", "push", "back","sort","based","out","in","scope","project","vector","PIR","harry","potter",
+    "construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file", "save", "access", "individual", "add","store", "delete", "cpp", "forum", "push","extract","among","space","file","string","object",
+    "write","program","article","execute","develop","follow","solution","same","against","when","submitted","mode","work","sentence","enter","conference","blog","interesting","courses","runtimes","comments","contact"};
+    
+    
+    EncryptSearchIndex index(100000);
+    Client client(index, 100000);
+    initServerIndex(client);
+    int threadNum = 128; 
+    int updateNum = 10000;
+    threadNum = 1;
+    
+    for(int updateNum = 10000; updateNum <= 1280000; updateNum*=2){
+        auto startTime = std::chrono::system_clock::now();     
+        for(int m = 0; m <updateNum; m++){
+            std::vector<std::thread> threads;
+            int avgKeywordsPerFile = 50;
+                std::map<std::string, uint32_t> toInsertKeywordsCounter;
+                //printf("init step %d\n", i);
+                for(int j = 0; j < avgKeywordsPerFile; j++){
+                    std::string keyword = keywords[std::rand() % keywords.size()];
+                    uint32_t frequency = std::rand() % 256;
+                    toInsertKeywordsCounter[keyword] = frequency;
+
+                }
+                client.updateFile( m  % 100000, toInsertKeywordsCounter);
+
+        }                                      
+        
+        auto endTime = std::chrono::system_clock::now();                                             
+        std::chrono::duration<double> elapsedSeconds = endTime - startTime;                                
+        std::cout  << elapsedSeconds.count() << std::endl; 
+
+    }
+
+
+    //client.index.printFilter();
+}
+
 void parallelBench(){
     std::vector<std::string> keywords = {"hello", "world", "push", "back","sort","based","out","in","scope","project","vector","PIR","harry","potter",
     "construct","update","insert","delete","thank","norm","query","hash","counter","frequency", "file", "save", "access", "individual", "add","store", "delete", "cpp", "forum", "push","extract","among","space","file","string","object",
@@ -270,6 +311,6 @@ void parallelBench(){
 
 int main(int argc, char **argv){
 
-    parallelBench();
-
+    //parallelBench();
+    ParallelUpdateBench();
 }
